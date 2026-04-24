@@ -89,10 +89,10 @@
                             class="p-2 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
-                        <a href="crm.html?ws=${ws.id}"
+                        <button onclick="openWorkspace('${ws.id}')"
                             class="px-5 py-2 bg-[#0E2925] text-white text-sm font-medium rounded-full hover:bg-[#153A35] transition-colors">
                             Open
-                        </a>
+                        </button>
                     </div>
                 </div>
                 ${i < workspaces.length - 1 ? '<div class="h-[1px] bg-gray-200 mx-4 my-1"></div>' : ''}
@@ -153,6 +153,10 @@
             if (!confirm(`Delete workspace "${ws.name}"? All data will be lost.`)) return;
             Store.deleteWorkspace(id);
             renderWorkspaces();
+        }
+
+        function openWorkspace(id) {
+            window.location.href = `crm.html?ws=${id}`;
         }
 
         function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
