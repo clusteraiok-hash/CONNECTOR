@@ -60,21 +60,43 @@ const Store = (() => {
     }
 
     function updateSchema(wsId, headers) {
-        // Normalize headers: trim and filter out empties, but keep original case
         const cleanHeaders = Array.from(new Set(headers.map(h => h.trim()).filter(Boolean)));
         if (cleanHeaders.length > 0) {
             _set('schema_' + wsId, cleanHeaders);
         }
     }
 
-    // ── Contacts (Dynamic Fields) ──
-    function getContacts(wsId) { return _get('contacts_' + wsId) || []; }
+    // ── Contacts (Dynamic Fields with Key Normalization) ──
+    function getContacts(wsId) { 
+        const contacts = _get('contacts_' + wsId) || []; 
+        const schema = getSchema(wsId);
+        
+        // Normalize keys on read to ensure they match the current schema
+        return contacts.map(c => {
+            const normalized = { id: c.id, createdAt: c.createdAt };
+            schema.forEach(h => {
+                // Find any key in c that matches h (case-insensitive)
+                const actualKey = Object.keys(c).find(k => k.trim().toLowerCase() === h.toLowerCase());
+                normalized[h] = actualKey ? c[actualKey] : '';
+            });
+            return normalized;
+        });
+    }
 
     function addContact(wsId, fields) {
-        const contacts = getContacts(wsId);
+        const contacts = _get('contacts_' + wsId) || [];
+        const schema = getSchema(wsId);
+        
+        // Normalize fields to match schema exactly
+        const normalizedFields = {};
+        schema.forEach(h => {
+            const actualKey = Object.keys(fields).find(k => k.trim().toLowerCase() === h.toLowerCase());
+            normalizedFields[h] = actualKey ? fields[actualKey] : '';
+        });
+
         const contact = { 
             id: 'c_' + _uid(), 
-            ...fields, 
+            ...normalizedFields, 
             createdAt: new Date().toISOString() 
         };
         contacts.push(contact);
@@ -83,13 +105,27 @@ const Store = (() => {
     }
 
     function updateContact(wsId, id, data) {
-        const contacts = getContacts(wsId).map(c => c.id === id ? { ...c, ...data } : c);
-        _set('contacts_' + wsId, contacts);
+        const contacts = _get('contacts_' + wsId) || [];
+        const schema = getSchema(wsId);
+        
+        const updated = contacts.map(c => {
+            if (c.id === id) {
+                const newObj = { ...c };
+                Object.keys(data).forEach(k => {
+                    const schemaHeader = schema.find(h => h.toLowerCase() === k.toLowerCase()) || k;
+                    newObj[schemaHeader] = data[k];
+                });
+                return newObj;
+            }
+            return c;
+        });
+        _set('contacts_' + wsId, updated);
     }
 
     function deleteContact(wsId, id) {
-        _set('contacts_' + wsId, getContacts(wsId).filter(c => c.id !== id));
-        _set('activities_' + wsId, getActivities(wsId).filter(a => a.contactId !== id));
+        const contacts = _get('contacts_' + wsId) || [];
+        _set('contacts_' + wsId, contacts.filter(c => c.id !== id));
+        _set('activities_' + wsId, (Store.getActivities ? Store.getActivities(wsId) : []).filter(a => a.contactId !== id));
     }
 
     function getContact(wsId, id) { return getContacts(wsId).find(c => c.id === id) || null; }
@@ -154,7 +190,7 @@ const Store = (() => {
         return getActivities(wsId).filter(a => a.contactId === contactId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
-    // ── Search (Dynamic) ──
+    // ── Search ──
     function globalSearch(wsId, query) {
         const q = query.toLowerCase().trim();
         if (!q) return { contacts: [], deals: [], tasks: [] };
@@ -168,22 +204,14 @@ const Store = (() => {
         };
     }
 
-    function seedDemoData(wsId) {
-        if (getContacts(wsId).length > 0) return;
-        const c1 = addContact(wsId, { Name: 'Sarah Chen', Email: 'sarah@techcorp.com', Phone: '+1 555-0101', Company: 'TechCorp Industries', Tags: 'enterprise, priority', Notes: 'Key decision maker' });
-        const c2 = addContact(wsId, { Name: 'Michael Ross', Email: 'michael@globalsol.com', Phone: '+1 555-0102', Company: 'Global Solutions', Tags: 'mid-market', Notes: 'Referred by Sarah' });
-        addDeal(wsId, { title: 'TechCorp Annual License', value: 45000, stage: 'proposal', contactId: c1.id });
-        addTask(wsId, { title: 'Follow-up call', dueDate: new Date().toISOString().split('T')[0], contactId: c1.id });
-    }
-
     return {
         getWorkspaces, createWorkspace, deleteWorkspace, getWorkspace,
         setActiveWorkspace, getActiveWorkspace,
         getSchema, updateSchema,
-        getContacts, addContact, updateContact, deleteContact, getContact,
+        getContacts, addContact, updateContact, deleteContact, getContact, getContactName,
         DEAL_STAGES, getDeals, addDeal, updateDeal, deleteDeal, getDeal, getDealsByStage,
         getTasks, addTask, updateTask, deleteTask, getTask,
         getActivities, addActivity, deleteActivity, getActivitiesForContact,
-        globalSearch, seedDemoData
+        globalSearch
     };
 })();
