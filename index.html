@@ -4,130 +4,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acme Onboarding</title>
+    <title>Connector CRM</title>
+    <meta name="description" content="Connector CRM — Manage your personal CRM and client workspaces">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital@0;1&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .font-serif-custom {
-            font-family: 'Playfair Display', serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital@0;1&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif-custom { font-family: 'Playfair Display', serif; }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-8">
 
-    <!-- Main Outer Container -->
-    <div
-        class="w-full max-w-[1100px] min-h-[750px] bg-[#0E2925] rounded-[32px] p-2 flex flex-col lg:flex-row shadow-2xl relative overflow-hidden">
+    <div class="w-full max-w-[1100px] min-h-[750px] bg-[#0E2925] rounded-[32px] p-2 flex flex-col lg:flex-row shadow-2xl relative overflow-hidden">
 
         <!-- Left White Panel -->
-        <div
-            class="bg-white rounded-[28px] w-full lg:w-[55%] flex flex-col relative z-10 p-8 sm:p-12 lg:p-16 h-full min-h-[600px] lg:min-h-full">
-
-            <!-- Header -->
-            <div class="flex items-start space-x-4 mb-12">
-                <button
-                    class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0">
-                    <i data-lucide="arrow-left" class="w-5 h-5 text-gray-700" stroke-width="1.5"></i>
-                </button>
-                <div class="flex flex-col mt-0.5">
-                    <span class="text-sm text-gray-500 font-normal">3/4</span>
-                    <span class="text-base text-gray-900 font-medium">Workspace</span>
-                </div>
-            </div>
+        <div class="bg-white rounded-[28px] w-full lg:w-[55%] flex flex-col relative z-10 p-8 sm:p-12 lg:p-16 h-full min-h-[600px] lg:min-h-full">
 
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col justify-center max-w-[420px] w-full mx-auto">
-                <h1 class="text-3xl text-gray-900 font-medium tracking-tight mb-3">Join your company on Acme!</h1>
-                <p class="text-base text-gray-500 mb-8">These workspaces allow anyone from @onecol.co to join:</p>
+                <h1 class="text-3xl text-gray-900 font-medium tracking-tight mb-3">Manage Your CRM & Clients</h1>
+                <p class="text-base text-gray-500 mb-8">Select a workspace or create a new one to get started:</p>
 
                 <!-- Workspaces List -->
-                <div class="bg-[#F8F9FA] rounded-[20px] p-2 mb-6 border border-gray-100">
-
-                    <!-- Workspace Item 1 -->
-                    <div class="flex items-center p-3 rounded-2xl hover:bg-white transition-colors group">
-                        <div
-                            class="w-12 h-12 bg-[#1A1A1A] rounded-[14px] flex items-center justify-center text-white font-serif-custom text-2xl shrink-0">
-                            O
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <h3 class="text-base font-medium text-gray-900">One Collective GmbH</h3>
-                            <p class="text-sm text-gray-500 mt-0.5">18 Members</p>
-                        </div>
-                        <a href="crm.html"
-                            class="px-5 py-2 bg-[#0E2925] text-white text-sm font-medium rounded-full hover:bg-[#153A35] transition-colors ml-4 shrink-0">
-                            Join
-                        </a>
-                    </div>
-
-                    <!-- Separator -->
-                    <div class="h-[1px] bg-gray-200 mx-4 my-1"></div>
-
-                    <!-- Workspace Item 2 -->
-                    <div class="flex items-center p-3 rounded-2xl hover:bg-white transition-colors group">
-                        <div
-                            class="w-12 h-12 bg-[#F3E8FF] text-[#9333EA] rounded-[14px] flex items-center justify-center text-lg font-medium shrink-0 tracking-tight">
-                            PS
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <h3 class="text-base font-medium text-gray-900">Personal Space</h3>
-                            <p class="text-sm text-gray-500 mt-0.5">2 Members</p>
-                        </div>
-                        <a href="crm.html"
-                            class="px-5 py-2 bg-[#0E2925] text-white text-sm font-medium rounded-full hover:bg-[#153A35] transition-colors ml-4 shrink-0">
-                            Join
-                        </a>
-                    </div>
+                <div id="workspaceList" class="bg-[#F8F9FA] rounded-[20px] p-2 mb-6 border border-gray-100 max-h-[320px] overflow-y-auto">
+                    <!-- Populated dynamically -->
                 </div>
 
-                <!-- Create New Action -->
-                <button
-                    class="w-full flex items-center p-3 group rounded-2xl hover:bg-gray-50 transition-colors text-left -ml-3">
-                    <div
-                        class="w-12 h-12 bg-[#F8F9FA] rounded-[14px] flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors shrink-0">
+                <!-- Create New Workspace -->
+                <button onclick="showCreateModal()"
+                    class="w-full flex items-center p-3 group rounded-2xl hover:bg-gray-50 transition-colors text-left">
+                    <div class="w-12 h-12 bg-[#F8F9FA] rounded-[14px] flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors shrink-0">
                         <i data-lucide="plus" class="w-5 h-5 text-gray-600" stroke-width="1.5"></i>
                     </div>
                     <span class="ml-4 text-base font-medium text-gray-900">Create New Workspace</span>
                 </button>
             </div>
 
-            <!-- Bottom Spacer to balance visual weight -->
             <div class="mt-12 lg:mt-24"></div>
         </div>
 
-        <!-- Right Dark Area with Shapes and Testimonial -->
-        <div
-            class="w-full lg:w-[45%] relative flex flex-col justify-end p-8 sm:p-12 lg:p-16 overflow-hidden min-h-[400px] lg:min-h-full">
-
-            <!-- Abstract Shapes (Background) -->
-            <div
-                class="absolute top-[-5%] right-[-10%] w-[90%] aspect-square bg-[#0C322C] rounded-[80px] opacity-80 pointer-events-none transform rotate-3">
-            </div>
-            <div
-                class="absolute top-[5%] right-[5%] w-[65%] aspect-square bg-[#113E37] rounded-[64px] shadow-2xl pointer-events-none">
-            </div>
-
-            <!-- Testimonial Content -->
+        <!-- Right Dark Area -->
+        <div class="w-full lg:w-[45%] relative flex flex-col justify-end p-8 sm:p-12 lg:p-16 overflow-hidden min-h-[400px] lg:min-h-full">
+            <div class="absolute top-[-5%] right-[-10%] w-[90%] aspect-square bg-[#0C322C] rounded-[80px] opacity-80 pointer-events-none transform rotate-3"></div>
+            <div class="absolute top-[5%] right-[5%] w-[65%] aspect-square bg-[#113E37] rounded-[64px] shadow-2xl pointer-events-none"></div>
             <div class="relative z-10 mt-auto pt-24">
                 <p class="text-base text-[#92B5B0] leading-relaxed mb-6 font-normal">
-                    'I used Acme because I knew they could deliver what I needed...someone who had a robust portfolio
-                    and someone who specialized in producing massive, open online education courses.'
+                    'Connector has completely transformed how I manage my client relationships. It's robust,
+                    intuitive, and keeps all my communication in one place.'
                 </p>
                 <p class="text-base text-white font-medium">
-                    Georgianna, PhD
+                    NOMAN GAZI, Independent Consultant
                 </p>
             </div>
         </div>
-
     </div>
 
+    <script src="js/store.js"></script>
     <script>
+        function renderWorkspaces() {
+            const list = document.getElementById('workspaceList');
+            const workspaces = Store.getWorkspaces();
+
+            if (workspaces.length === 0) {
+                // Seed default workspaces
+                Store.createWorkspace({ name: 'My CRM', type: 'personal', color: '#1A1A1A' });
+                Store.createWorkspace({ name: 'Client Projects', type: 'client', color: '#9333EA' });
+                return renderWorkspaces();
+            }
+
+            list.innerHTML = workspaces.map((ws, i) => `
+                <div class="flex items-center p-3 rounded-2xl hover:bg-white transition-colors group">
+                    <div class="w-12 h-12 rounded-[14px] flex items-center justify-center text-white font-semibold text-lg shrink-0"
+                         style="background:${ws.color}">
+                        ${ws.initials}
+                    </div>
+                    <div class="ml-4 flex-1 min-w-0">
+                        <h3 class="text-base font-medium text-gray-900 truncate">${escHtml(ws.name)}</h3>
+                        <p class="text-sm text-gray-500 mt-0.5 capitalize">${ws.type} workspace</p>
+                    </div>
+                    <div class="flex items-center gap-2 ml-3 shrink-0">
+                        <button onclick="event.stopPropagation(); deleteWorkspace('${ws.id}')"
+                            class="p-2 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                        <a href="crm.html?ws=${ws.id}"
+                            class="px-5 py-2 bg-[#0E2925] text-white text-sm font-medium rounded-full hover:bg-[#153A35] transition-colors">
+                            Open
+                        </a>
+                    </div>
+                </div>
+                ${i < workspaces.length - 1 ? '<div class="h-[1px] bg-gray-200 mx-4 my-1"></div>' : ''}
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function showCreateModal() {
+            const modal = document.createElement('div');
+            modal.id = 'createModal';
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+            <div class="fixed inset-0 bg-black/30" onclick="document.getElementById('createModal').remove()"></div>
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-5">Create Workspace</h2>
+                <form id="createForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Workspace Name *</label>
+                        <input name="name" required placeholder="e.g. My CRM, Client: TechCorp"
+                            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <select name="type" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <option value="personal">Personal CRM</option>
+                            <option value="client" selected>Client CRM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                        <div class="flex gap-2">
+                            ${['#1A1A1A','#9333EA','#2563EB','#059669','#DC2626','#D97706','#0891B2','#7C3AED','#DB2777'].map(c =>
+                                `<label class="cursor-pointer"><input type="radio" name="color" value="${c}" class="hidden peer" ${c === '#1A1A1A' ? 'checked' : ''}>
+                                <div class="w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-gray-900 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-gray-300 transition-all" style="background:${c}"></div></label>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="document.getElementById('createModal').remove()"
+                            class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="flex-1 px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">Create</button>
+                    </div>
+                </form>
+            </div>`;
+            document.body.appendChild(modal);
+            document.getElementById('createForm').onsubmit = (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                Store.createWorkspace({ name: fd.get('name'), type: fd.get('type'), color: fd.get('color') });
+                modal.remove();
+                renderWorkspaces();
+            };
+        }
+
+        function deleteWorkspace(id) {
+            const ws = Store.getWorkspace(id);
+            if (!confirm(`Delete workspace "${ws.name}"? All data will be lost.`)) return;
+            Store.deleteWorkspace(id);
+            renderWorkspaces();
+        }
+
+        function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+        // Init
+        renderWorkspaces();
         lucide.createIcons();
     </script>
 </body>

@@ -1,487 +1,58 @@
 <!DOCTYPE html>
-<html lang="en" class="antialiased text-gray-900 bg-gray-200">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tasks & Activities Dashboard</title>
+    <title>Connector CRM — Dashboard</title>
+    <meta name="description" content="Connector CRM — Manage your personal CRM and client relationships">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            backdrop-filter: blur(20px);
-        }
-
-        /* Custom scrollbar for webkit */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #E5E7EB;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #D1D5DB;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+        .drop-zone { transition: all 0.2s ease; }
     </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+<body class="min-h-screen bg-[#F7F8FA]">
 
-    <!-- App Window Container -->
-    <div
-        class="w-full max-w-[1280px] h-[850px] bg-[#F7F8FA] rounded-2xl shadow-2xl flex overflow-hidden border border-white/20 relative">
+    <div class="w-full h-screen flex overflow-hidden">
 
         <!-- Sidebar -->
-        <aside class="w-[260px] bg-white flex flex-col border-r border-gray-100 flex-shrink-0 z-10">
-            <!-- Logo -->
-            <div class="h-20 px-6 flex items-center gap-2">
-                <div class="bg-gray-900 text-white p-1.5 rounded-lg flex items-center justify-center">
-                    <i data-lucide="layers" class="w-5 h-5"></i>
-                </div>
-                <span class="text-xl font-semibold tracking-tight">Tenx</span>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="home" class="w-5 h-5"></i>
-                    Dashboard
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    Leads & Contacts
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="target" class="w-5 h-5"></i>
-                    Deals Pipeline
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="line-chart" class="w-5 h-5"></i>
-                    Analytics
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-900 bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] border border-gray-100 mb-2 mt-2 relative">
-                    <i data-lucide="check-square" class="w-5 h-5 text-gray-900 fill-gray-900/10"></i>
-                    Tasks & Activities
-                    <!-- Left active indicator line -->
-                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gray-900 rounded-r-full hidden">
-                    </div>
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="message-square" class="w-5 h-5"></i>
-                    Messages
-                </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                    Settings
-                </a>
-            </nav>
-
-            <!-- Bottom Area -->
-            <div class="p-4 space-y-4">
-                <!-- Upgrade Card -->
-                <div
-                    class="p-5 rounded-2xl bg-gradient-to-br from-gray-50 via-gray-100/50 to-orange-100/40 relative overflow-hidden group">
-                    <div
-                        class="absolute top-0 right-0 w-32 h-32 bg-orange-200/30 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-110">
-                    </div>
-                    <div class="relative z-10">
-                        <h4 class="text-base font-semibold text-gray-900 mb-1">Upgrade to Pro</h4>
-                        <p class="text-sm text-gray-600 mb-4 leading-relaxed">Unlock advanced features and unlimited
-                            contacts</p>
-                        <button
-                            class="w-full bg-white text-gray-900 text-base font-medium py-2.5 rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
-                            Upgrade Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Theme Toggle -->
-                <div class="flex items-center p-1 bg-gray-100/80 rounded-full">
-                    <button
-                        class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white rounded-full shadow-sm text-sm font-medium text-gray-900">
-                        <i data-lucide="sun" class="w-4 h-4"></i> Light
-                    </button>
-                    <button
-                        class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
-                        <i data-lucide="moon" class="w-4 h-4"></i> Dark
-                    </button>
-                </div>
-            </div>
+        <aside id="sidebar" class="w-[250px] bg-white flex flex-col border-r border-gray-100 shrink-0">
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main Area -->
         <main class="flex-1 flex flex-col min-w-0">
 
             <!-- Top Header -->
-            <header class="h-20 px-8 flex items-center justify-between flex-shrink-0">
-                <!-- Search -->
-                <div class="relative w-full max-w-[400px]">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
-                    </div>
-                    <input type="text" placeholder="Search ....."
-                        class="block w-full pl-10 pr-12 py-2.5 border-none rounded-xl text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 shadow-sm">
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span class="text-xs text-gray-400 font-medium flex items-center gap-1">
-                            <i data-lucide="command" class="w-3 h-3"></i> k
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Right Actions -->
-                <div class="flex items-center gap-3">
-                    <button
-                        class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:text-gray-900 border border-transparent hover:border-gray-200 transition-all">
-                        <i data-lucide="search" class="w-5 h-5"></i>
-                    </button>
-                    <button
-                        class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:text-gray-900 border border-transparent hover:border-gray-200 transition-all">
-                        <i data-lucide="zap" class="w-5 h-5"></i>
-                    </button>
-                    <button
-                        class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:text-gray-900 border border-transparent hover:border-gray-200 transition-all relative">
-                        <i data-lucide="bell" class="w-5 h-5"></i>
-                        <span
-                            class="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
-                    </button>
-
-                    <div class="h-6 w-px bg-gray-200 mx-1"></div>
-
-                    <!-- User Dropdown -->
-                    <button
-                        class="flex items-center gap-2 pl-1 pr-3 py-1 bg-white rounded-full shadow-sm border border-transparent hover:border-gray-200 transition-all">
-                        <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                            alt="Warren" class="w-8 h-8 rounded-full bg-gray-100 object-cover">
-                        <span class="text-base font-medium text-gray-700">Warren</span>
-                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
-                    </button>
-                </div>
+            <header id="topHeader" class="h-14 px-6 flex items-center justify-between shrink-0 border-b border-gray-100 bg-white">
             </header>
 
-            <!-- Page Content Scroll Area -->
-            <div class="flex-1 overflow-y-auto px-8 pb-8 pt-4">
-
-                <!-- Page Header -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-medium text-gray-900 tracking-tight mb-1">Tasks & Activities</h1>
-                    <p class="text-base text-gray-500">Manage your to-do list and schedule</p>
-                </div>
-
-                <!-- Tabs & Actions -->
-                <div class="flex items-center justify-between mb-6">
-                    <!-- Tabs -->
-                    <div class="flex items-center bg-white p-1 rounded-xl shadow-sm border border-gray-100">
-                        <button class="px-4 py-2 rounded-lg bg-[#FCEEA4] text-gray-900 text-base font-medium">
-                            All Leads (6)
-                        </button>
-                        <button
-                            class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-900 text-base font-medium transition-colors">
-                            New (2)
-                        </button>
-                        <button
-                            class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-900 text-base font-medium transition-colors">
-                            Qualified (2)
-                        </button>
-                        <button
-                            class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-900 text-base font-medium transition-colors">
-                            Contacted (2)
-                        </button>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-3">
-                        <button
-                            class="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-sm text-gray-700 text-base font-medium border border-gray-100 hover:bg-gray-50 transition-colors">
-                            <i data-lucide="filter" class="w-4 h-4"></i>
-                            Filter
-                        </button>
-                        <button
-                            class="flex items-center gap-2 px-5 py-2.5 bg-[#FCEEA4] rounded-xl text-gray-900 text-base font-medium hover:bg-[#fbdc59] transition-colors shadow-sm">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            Add Task
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Task List -->
-                <div class="space-y-3">
-
-                    <!-- Task Item 1 -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 hover:shadow-md transition-shadow flex gap-4">
-                        <div class="pt-1 flex-shrink-0">
-                            <!-- Custom Unchecked Checkbox -->
-                            <div
-                                class="w-5 h-5 rounded border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors flex items-center justify-center">
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug">Follow-up
-                                    call with TechCorp</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-sm font-medium">
-                                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> high
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-600 text-sm font-medium">
-                                        call
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-base text-gray-500 mb-4">Discuss contract terms and pricing</p>
-
-                            <div class="flex items-center text-sm text-gray-500 gap-6">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                                    Nov 12, 2024
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    Related to: <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-700 font-medium">TechCorp
-                                        Industries</a>
-                                </div>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt="Sarah Chen" class="w-6 h-6 rounded-full object-cover bg-gray-100">
-                                    <span class="text-gray-900 font-medium">Sarah Chen</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task Item 2 -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 hover:shadow-md transition-shadow flex gap-4">
-                        <div class="pt-1 flex-shrink-0">
-                            <!-- Custom Unchecked Checkbox -->
-                            <div
-                                class="w-5 h-5 rounded border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors flex items-center justify-center">
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug">Send
-                                    proposal to Global Solutions</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-sm font-medium">
-                                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> high
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-sm font-medium">
-                                        email
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-base text-gray-500 mb-4">Include pricing and implementation timeline</p>
-
-                            <div class="flex items-center text-sm text-gray-500 gap-6">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                                    Nov 13, 2024
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    Related to: <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-700 font-medium">Global Solutions</a>
-                                </div>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt="Michael Ross" class="w-6 h-6 rounded-full object-cover bg-gray-100">
-                                    <span class="text-gray-900 font-medium">Michael Ross</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task Item 3 -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 hover:shadow-md transition-shadow flex gap-4">
-                        <div class="pt-1 flex-shrink-0">
-                            <!-- Custom Unchecked Checkbox -->
-                            <div
-                                class="w-5 h-5 rounded border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors flex items-center justify-center">
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug">Product
-                                    demo for StartupHub</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 text-sm font-medium">
-                                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> medium
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-purple-50 text-purple-600 text-sm font-medium">
-                                        meeting
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-base text-gray-500 mb-4">Showcase new features and integrations</p>
-
-                            <div class="flex items-center text-sm text-gray-500 gap-6">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                                    Nov 14, 2024
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    Related to: <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-700 font-medium">StartupHub</a>
-                                </div>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt="Emily Davis" class="w-6 h-6 rounded-full object-cover bg-gray-100">
-                                    <span class="text-gray-900 font-medium">Emily Davis</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task Item 4 -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 hover:shadow-md transition-shadow flex gap-4">
-                        <div class="pt-1 flex-shrink-0">
-                            <!-- Custom Unchecked Checkbox -->
-                            <div
-                                class="w-5 h-5 rounded border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors flex items-center justify-center">
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug">Contract
-                                    review with legal</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 text-sm font-medium">
-                                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> medium
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-600 text-sm font-medium">
-                                        call
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-base text-gray-500 mb-4">Review and approve Enterprise Systems contract</p>
-
-                            <div class="flex items-center text-sm text-gray-500 gap-6">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                                    Nov 15, 2024
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    Related to: <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-700 font-medium">Enterprise Systems</a>
-                                </div>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt="James Wilson" class="w-6 h-6 rounded-full object-cover bg-gray-100">
-                                    <span class="text-gray-900 font-medium">James Wilson</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task Item 5 (Checked State) -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 hover:shadow-md transition-shadow flex gap-4">
-                        <div class="pt-1 flex-shrink-0">
-                            <!-- Custom Checked Checkbox -->
-                            <div
-                                class="w-5 h-5 rounded border border-transparent bg-[#F2C94C] cursor-pointer flex items-center justify-center text-white shadow-inner">
-                                <i data-lucide="check" class="w-3.5 h-3.5" stroke-width="3"></i>
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0 opacity-70">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3
-                                    class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug line-through">
-                                    Follow-up email to Innovate Corp</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-sm font-medium">
-                                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> high
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-yellow-100 text-yellow-700 text-sm font-medium">
-                                        follow-up
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-base text-gray-500 mb-4 line-through">Check status of proposal submission</p>
-
-                            <div class="flex items-center text-sm text-gray-500 gap-6">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                                    Nov 11, 2024
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    Related to: <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-700 font-medium">Innovate Corp</a>
-                                </div>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt="Michael Ross" class="w-6 h-6 rounded-full object-cover bg-gray-100">
-                                    <span class="text-gray-900 font-medium">Michael Ross</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom partial task to show scrolling -->
-                    <div
-                        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50 flex gap-4 opacity-50 translate-y-2">
-                        <div class="pt-1 flex-shrink-0">
-                            <div class="w-5 h-5 rounded border-2 border-gray-200"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-[19px] font-medium text-gray-900 tracking-tight leading-snug">Quarterly
-                                    review meeting</h3>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-md bg-purple-50 text-purple-600 text-sm font-medium">
-                                        meeting
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+            <!-- Page Content -->
+            <div id="mainContent" class="flex-1 overflow-y-auto px-6 pb-8 pt-5">
             </div>
+
         </main>
     </div>
 
+    <!-- Scripts -->
+    <script src="js/store.js"></script>
+    <script src="js/csv.js"></script>
+    <script src="js/contacts.js"></script>
+    <script src="js/deals.js"></script>
+    <script src="js/tasks.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/app.js"></script>
     <script>
-        // Initialize Lucide icons with custom stroke width
-        lucide.createIcons({
-            attrs: {
-                'stroke-width': 1.5
-            }
-        });
+        document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
 
