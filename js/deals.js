@@ -77,8 +77,8 @@ const Deals = (() => {
             <p class="text-lg font-semibold text-gray-900 mb-3">$${Number(d.value).toLocaleString()}</p>
             <div class="flex items-center justify-between">
                 ${contact ? `<div class="flex items-center gap-2">
-                    <div class="w-6 h-6 ${colors[contact.name.charCodeAt(0) % colors.length]} rounded-full flex items-center justify-center text-white text-[10px] font-bold">${contact.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
-                    <span class="text-xs text-gray-500">${_esc(contact.name)}</span>
+                    <div class="w-6 h-6 ${colors[Store.getContactName(contact).charCodeAt(0) % colors.length]} rounded-full flex items-center justify-center text-white text-[10px] font-bold">${Store.getContactName(contact).split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+                    <span class="text-xs text-gray-500">${_esc(Store.getContactName(contact))}</span>
                 </div>` : '<span></span>'}
                 ${d.closeDate ? `<span class="text-xs text-gray-400">${_fmtDate(d.closeDate)}</span>` : ''}
             </div>
@@ -139,7 +139,7 @@ const Deals = (() => {
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
                     <select name="contactId" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
                         <option value="">— None —</option>
-                        ${contacts.map(c => `<option value="${c.id}" ${data.contactId === c.id ? 'selected' : ''}>${_esc(c.name)}</option>`).join('')}
+                        ${contacts.map(c => `<option value="${c.id}" ${data.contactId === c.id ? 'selected' : ''}>${_esc(Store.getContactName(c))}</option>`).join('')}
                     </select></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Close Date</label>
                     <input name="closeDate" type="date" value="${data.closeDate || ''}" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"></div>

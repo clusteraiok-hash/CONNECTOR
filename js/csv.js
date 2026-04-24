@@ -1,30 +1,26 @@
 /**
  * Connector CRM — CSV Import/Export
- * Robust implementation handling quoted fields, newlines, and flexible headers.
+ * Robust implementation handling quoted fields, newlines, and dynamic schema.
  */
 const CSV = (() => {
     
     /**
-     * Exports contacts to a CSV file.
+     * Exports contacts to a CSV file based on the workspace schema.
      */
     function exportContacts(wsId) {
         const contacts = Store.getContacts(wsId);
+        const schema = Store.getSchema(wsId);
         if (contacts.length === 0) { alert('No contacts to export.'); return; }
         
-        const headers = ['Name', 'Email', 'Phone', 'Company', 'Tags', 'Notes'];
-        const rows = contacts.map(c => [
-            c.name, 
-            c.email, 
-            c.phone, 
-            c.company, 
-            (c.tags || []).join(';'), 
-            c.notes
-        ].map(v => {
-            const str = String(v || '').replace(/"/g, '""');
-            return `"${str}"`;
-        }).join(','));
+        const rows = contacts.map(c => 
+            schema.map(header => {
+                const val = c[header] || '';
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            }).join(',')
+        );
 
-        const csvContent = [headers.join(','), ...rows].join('\n');
+        const csvContent = [schema.join(','), ...rows].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -35,7 +31,7 @@ const CSV = (() => {
     }
 
     /**
-     * Imports contacts from a CSV file.
+     * Imports contacts from a CSV file and dynamically updates the workspace schema.
      */
     function importContacts(wsId, file) {
         return new Promise((resolve, reject) => {
@@ -50,40 +46,29 @@ const CSV = (() => {
                         return;
                     }
 
-                    const headers = data[0].map(h => h.toLowerCase().trim());
+                    // Extract headers (Schema)
+                    const headers = data[0].map(h => h.trim()).filter(Boolean);
                     
-                    // Flexible header mapping
-                    const findIdx = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
-                    
-                    const nameIdx = findIdx(['name', 'contact', 'person', 'full name']);
-                    const emailIdx = findIdx(['email', 'mail', 'e-mail']);
-                    const phoneIdx = findIdx(['phone', 'mobile', 'tel', 'cell']);
-                    const companyIdx = findIdx(['company', 'organization', 'account', 'business', 'firm']);
-                    const tagsIdx = findIdx(['tag', 'category', 'label', 'group']);
-                    const notesIdx = findIdx(['note', 'comment', 'description', 'detail', 'bio']);
-
-                    if (nameIdx === -1) {
-                        reject('Could not find a "Name" column. Please ensure your CSV has a header row.');
-                        return;
-                    }
+                    // Update workspace schema if new columns are found
+                    const currentSchema = Store.getSchema(wsId);
+                    const mergedSchema = Array.from(new Set([...currentSchema, ...headers]));
+                    Store.updateSchema(wsId, mergedSchema);
 
                     let imported = 0;
                     for (let i = 1; i < data.length; i++) {
                         const row = data[i];
-                        if (row.length === 0 || !row[nameIdx]) continue;
+                        if (row.length === 0) continue;
 
-                        const name = row[nameIdx].trim();
-                        if (!name) continue;
-
-                        Store.addContact(wsId, {
-                            name,
-                            email: emailIdx >= 0 ? (row[emailIdx] || '').trim() : '',
-                            phone: phoneIdx >= 0 ? (row[phoneIdx] || '').trim() : '',
-                            company: companyIdx >= 0 ? (row[companyIdx] || '').trim() : '',
-                            tags: tagsIdx >= 0 ? (row[tagsIdx] || '').split(/[;|,]/).map(t => t.trim()).filter(Boolean) : [],
-                            notes: notesIdx >= 0 ? (row[notesIdx] || '').trim() : ''
+                        const fields = {};
+                        headers.forEach((header, idx) => {
+                            fields[header] = (row[idx] || '').trim();
                         });
-                        imported++;
+
+                        // Basic validation: ensure at least one field has data
+                        if (Object.values(fields).some(v => v)) {
+                            Store.addContact(wsId, fields);
+                            imported++;
+                        }
                     }
                     resolve(imported);
                 } catch (err) {
@@ -105,7 +90,6 @@ const CSV = (() => {
         let currentField = '';
         let inQuotes = false;
 
-        // Normalize line endings
         const cleanText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
         for (let i = 0; i < cleanText.length; i++) {
@@ -114,38 +98,30 @@ const CSV = (() => {
 
             if (inQuotes) {
                 if (char === '"' && nextChar === '"') {
-                    // Escaped quote
                     currentField += '"';
                     i++;
                 } else if (char === '"') {
-                    // Closing quote
                     inQuotes = false;
                 } else {
-                    // Character inside quotes
                     currentField += char;
                 }
             } else {
                 if (char === '"') {
-                    // Opening quote
                     inQuotes = true;
                 } else if (char === ',') {
-                    // Field separator
                     currentRow.push(currentField);
                     currentField = '';
                 } else if (char === '\n') {
-                    // Row separator
                     currentRow.push(currentField);
                     rows.push(currentRow);
                     currentRow = [];
                     currentField = '';
                 } else {
-                    // Normal character
                     currentField += char;
                 }
             }
         }
         
-        // Push last field/row if exists
         if (currentField || currentRow.length > 0) {
             currentRow.push(currentField);
             rows.push(currentRow);

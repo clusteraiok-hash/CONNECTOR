@@ -92,7 +92,7 @@ const Reports = (() => {
                         <button onclick="Tasks.toggle('${t.id}'); App.navigate('dashboard')" class="w-4 h-4 rounded border-2 border-gray-300 hover:border-gray-400 shrink-0"></button>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-gray-900 truncate">${_esc(t.title)}</p>
-                            ${contact ? `<p class="text-xs text-gray-400">${_esc(contact.name)}</p>` : ''}
+                            ${contact ? `<p class="text-xs text-gray-400">${_esc(Store.getContactName(contact))}</p>` : ''}
                         </div>
                         <i data-lucide="flag" class="w-3.5 h-3.5 ${pColors[t.priority]} shrink-0"></i>
                     </div>`;
@@ -111,7 +111,7 @@ const Reports = (() => {
                         <i data-lucide="${icons[a.type] || 'activity'}" class="w-4 h-4 ${colors[a.type] || 'text-gray-400'} shrink-0 mt-0.5"></i>
                         <div class="min-w-0">
                             <p class="text-xs text-gray-600 truncate">${_esc(a.content)}</p>
-                            <p class="text-[10px] text-gray-400">${contact ? _esc(contact.name) + ' · ' : ''}${_relTime(a.createdAt)}</p>
+                             <p class="text-[10px] text-gray-400">${contact ? _esc(Store.getContactName(contact)) + ' · ' : ''}${_relTime(a.createdAt)}</p>
                         </div>
                     </div>`;
                 }).join('')}</div>`}

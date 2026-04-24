@@ -72,7 +72,7 @@ const Tasks = (() => {
                     ${t.dueDate ? `<span class="flex items-center gap-1 ${isOverdue ? 'text-red-500 font-medium' : isToday ? 'text-amber-600 font-medium' : ''}">
                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i> ${_fmtDate(t.dueDate)}${isOverdue ? ' (overdue)' : isToday ? ' (today)' : ''}
                     </span>` : ''}
-                    ${contact ? `<span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> ${_esc(contact.name)}</span>` : ''}
+                    ${contact ? `<span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> ${_esc(Store.getContactName(contact))}</span>` : ''}
                     ${deal ? `<span class="flex items-center gap-1"><i data-lucide="target" class="w-3.5 h-3.5"></i> ${_esc(deal.title)}</span>` : ''}
                 </div>
             </div>
@@ -159,7 +159,7 @@ const Tasks = (() => {
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
                         <select name="contactId" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
                             <option value="">— None —</option>
-                            ${contacts.map(c => `<option value="${c.id}" ${data.contactId === c.id ? 'selected' : ''}>${_esc(c.name)}</option>`).join('')}
+                            ${contacts.map(c => `<option value="${c.id}" ${data.contactId === c.id ? 'selected' : ''}>${_esc(Store.getContactName(c))}</option>`).join('')}
                         </select></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Deal</label>
                         <select name="dealId" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
