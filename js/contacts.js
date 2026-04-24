@@ -1,5 +1,6 @@
 /**
- * Connector CRM — Spreadsheet-style Contacts Module
+ * Connector CRM — Advanced Spreadsheet Contacts Module
+ * Supports multi-selection, bulk delete, and column management.
  */
 const Contacts = (() => {
     let _wsId = null;
@@ -7,6 +8,8 @@ const Contacts = (() => {
     let _sortDir = 'asc';
     let _filterQuery = '';
     let _groupBy = null;
+    let _selectedIds = new Set();
+    let _selectedHeaders = new Set();
 
     function init(wsId) { 
         _wsId = wsId; 
@@ -14,31 +17,41 @@ const Contacts = (() => {
         _sortDir = 'asc';
         _filterQuery = '';
         _groupBy = null;
+        _selectedIds.clear();
+        _selectedHeaders.clear();
     }
 
     function render() {
         const schema = Store.getSchema(_wsId);
         const contacts = _getProcessedContacts();
+        const hasSelection = _selectedIds.size > 0 || _selectedHeaders.size > 0;
 
         return `
         <div class="mb-6 flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Contacts</h1>
-                    <p class="text-sm text-gray-500 mt-0.5">${contacts.length} total records in this view</p>
+                    <p class="text-sm text-gray-500 mt-0.5">${contacts.length} records · ${hasSelection ? `<span class="text-[#0E2925] font-bold">${_selectedIds.size} rows, ${_selectedHeaders.size} columns selected</span>` : 'spreadsheet mode'}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="Contacts.showDedupeModal()" class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                        <i data-lucide="copy-minus" class="w-4 h-4"></i> Remove Duplicates
-                    </button>
-                    <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
-                    <label class="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#0E2925] text-white rounded-lg text-sm font-medium hover:bg-[#153A35] transition-colors">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
-                        <input type="file" accept=".csv" class="hidden" onchange="Contacts.handleImport(this)">
-                    </label>
-                    <button onclick="CSV.exportContacts('${_wsId}')" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                        <i data-lucide="download" class="w-4 h-4"></i> Export
-                    </button>
+                    ${hasSelection ? `
+                        <button onclick="Contacts.bulkDelete()" class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors border border-red-100">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Selected
+                        </button>
+                        <button onclick="Contacts.clearSelection()" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-600">Cancel</button>
+                    ` : `
+                        <button onclick="Contacts.showDedupeModal()" class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="copy-minus" class="w-4 h-4"></i> Dedupe
+                        </button>
+                        <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
+                        <label class="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#0E2925] text-white rounded-lg text-sm font-medium hover:bg-[#153A35] transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Import
+                            <input type="file" accept=".csv" class="hidden" onchange="Contacts.handleImport(this)">
+                        </label>
+                        <button onclick="CSV.exportContacts('${_wsId}')" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="download" class="w-4 h-4"></i> Export
+                        </button>
+                    `}
                 </div>
             </div>
 
@@ -60,6 +73,12 @@ const Contacts = (() => {
                     </select>
                 </div>
 
+                <div class="h-6 w-[1px] bg-gray-100 mx-1"></div>
+
+                <button onclick="Contacts.showAddColumnModal()" class="flex items-center gap-1.5 px-2 py-1 text-gray-500 hover:text-gray-900 transition-colors">
+                    <i data-lucide="plus-square" class="w-4 h-4"></i> <span class="text-xs font-bold uppercase tracking-wider">New Column</span>
+                </button>
+
                 <div class="ml-auto flex items-center gap-2">
                     <button onclick="Contacts.resetSchema()" class="text-[11px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider px-2">Reset Grid</button>
                 </div>
@@ -69,38 +88,46 @@ const Contacts = (() => {
         <!-- Spreadsheet Grid -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-sm table-fixed">
+                <table class="w-full border-collapse text-sm table-fixed min-w-full">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200">
+                        <tr class="bg-gray-50 border-b border-gray-200 select-none">
+                            <th class="w-10 border-r border-gray-200 px-2 py-2 text-center">
+                                <input type="checkbox" onchange="Contacts.toggleSelectAll(this.checked)" ${contacts.length > 0 && _selectedIds.size === contacts.length ? 'checked' : ''} class="rounded border-gray-300 text-[#0E2925] focus:ring-[#0E2925]">
+                            </th>
                             <th class="w-12 border-r border-gray-200 px-2 py-2 text-center text-[10px] font-bold text-gray-400 uppercase">#</th>
                             ${schema.map(h => `
-                                <th class="w-48 min-w-[120px] border-r border-gray-200 px-3 py-2 text-left group relative">
-                                    <div class="flex items-center justify-between cursor-pointer" onclick="Contacts.handleSort('${h}')">
-                                        <span class="font-bold text-gray-500 uppercase tracking-tight text-[11px] truncate">${_esc(h)}</span>
-                                        <span class="text-gray-300">
-                                            ${_sortBy === h ? (_sortDir === 'asc' ? '↑' : '↓') : ''}
-                                        </span>
+                                <th class="w-48 min-w-[160px] border-r border-gray-200 p-0 relative group ${_selectedHeaders.has(h) ? 'bg-blue-50' : ''}">
+                                    <div class="flex flex-col h-full">
+                                        <div class="flex items-center justify-between px-3 py-2 cursor-pointer border-b border-gray-100" onclick="Contacts.handleSort('${h}')">
+                                            <span class="font-bold text-gray-500 uppercase tracking-tight text-[11px] truncate">${_esc(h)}</span>
+                                            <span class="text-gray-400">
+                                                ${_sortBy === h ? (_sortDir === 'asc' ? '↑' : '↓') : ''}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center justify-center gap-4 py-1 bg-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onclick="Contacts.toggleHeaderSelect('${h}')" title="Select Column" class="p-1 ${_selectedHeaders.has(h) ? 'text-blue-600' : 'text-gray-300 hover:text-gray-600'}"><i data-lucide="check-square" class="w-3.5 h-3.5"></i></button>
+                                            <button onclick="Contacts.deleteColumn('${h}')" title="Delete Column" class="p-1 text-gray-300 hover:text-red-500"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i></button>
+                                        </div>
                                     </div>
                                     <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-400 transition-colors"></div>
                                 </th>
                             `).join('')}
-                            <th class="w-16 px-2 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
                         ${_groupBy ? _renderGroupedRows(contacts, schema) : _renderRows(contacts, schema)}
                         
-                        <!-- New Row (Manual Add) -->
-                        <tr class="bg-blue-50/30 border-b border-gray-100 group">
+                        <!-- New Row -->
+                        <tr class="bg-blue-50/20 border-b border-gray-100">
+                            <td class="border-r border-gray-200"></td>
                             <td class="border-r border-gray-200 text-center text-gray-300 font-bold text-[10px]"><i data-lucide="plus" class="w-3 h-3 mx-auto"></i></td>
                             ${schema.map(h => `
                                 <td class="border-r border-gray-200 p-0">
-                                    <input type="text" placeholder="Add ${h}..." 
+                                    <input type="text" placeholder="New ${h}..." 
                                         onkeydown="Contacts.handleQuickAdd(event, this, '${h}')"
-                                        class="w-full px-3 py-2 bg-transparent border-none text-sm focus:ring-0 placeholder-gray-300">
+                                        class="w-full px-3 py-2.5 bg-transparent border-none text-sm focus:ring-0 placeholder-gray-300">
                                 </td>
                             `).join('')}
-                            <td class="px-2 py-2"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -112,19 +139,19 @@ const Contacts = (() => {
     function _renderRows(contacts, schema) {
         if (contacts.length === 0) return '';
         return contacts.map((c, i) => `
-            <tr class="border-b border-gray-100 hover:bg-gray-50/50 group">
+            <tr class="border-b border-gray-100 hover:bg-gray-50/50 group ${_selectedIds.has(c.id) ? 'bg-blue-50/50' : ''}">
+                <td class="border-r border-gray-200 px-2 py-2 text-center">
+                    <input type="checkbox" onchange="Contacts.toggleSelect('${c.id}')" ${_selectedIds.has(c.id) ? 'checked' : ''} class="rounded border-gray-300 text-[#0E2925] focus:ring-[#0E2925]">
+                </td>
                 <td class="border-r border-gray-200 px-2 py-2 text-center text-gray-400 font-mono text-[10px] bg-gray-50/30">${i + 1}</td>
                 ${schema.map(h => `
-                    <td class="border-r border-gray-200 p-0 relative">
+                    <td class="border-r border-gray-200 p-0 relative ${_selectedHeaders.has(h) ? 'bg-blue-50/30' : ''}">
                         <input type="text" value="${_esc(c[h] || '')}" 
                             onblur="Contacts.updateCell('${c.id}', '${h}', this.value)"
                             onkeydown="if(event.key==='Enter') this.blur()"
                             class="w-full px-3 py-2 bg-transparent border-none text-sm focus:bg-white focus:shadow-[inset_0_0_0_2px_#3b82f6] outline-none transition-all">
                     </td>
                 `).join('')}
-                <td class="px-2 py-2 text-center opacity-0 group-hover:opacity-100">
-                    <button onclick="Contacts.remove('${c.id}')" class="p-1 text-gray-300 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                </td>
             </tr>
         `).join('');
     }
@@ -138,16 +165,115 @@ const Contacts = (() => {
         });
 
         return Object.keys(groups).sort().map(groupKey => `
-            <tr class="bg-gray-100/50 border-b border-gray-200">
-                <td colspan="${schema.length + 2}" class="px-4 py-2 text-xs font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2">
-                    <i data-lucide="layers" class="w-3 h-3"></i> ${_groupBy}: ${_esc(groupKey)} <span class="text-gray-400 font-normal">(${groups[groupKey].length})</span>
+            <tr class="bg-gray-50 border-b border-gray-200">
+                <td colspan="${schema.length + 2}" class="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="layers" class="w-3 h-3"></i> ${_groupBy}: <span class="text-gray-900">${_esc(groupKey)}</span> <span class="font-normal lowercase">(${groups[groupKey].length} records)</span>
                 </td>
             </tr>
             ${_renderRows(groups[groupKey], schema)}
         `).join('');
     }
 
-    // ── Handlers ──
+    // ── Selection Logic ──
+
+    function toggleSelect(id) {
+        if (_selectedIds.has(id)) _selectedIds.delete(id);
+        else _selectedIds.add(id);
+        _rerender();
+    }
+
+    function toggleSelectAll(checked) {
+        if (checked) {
+            const contacts = _getProcessedContacts();
+            contacts.forEach(c => _selectedIds.add(c.id));
+        } else {
+            _selectedIds.clear();
+        }
+        _rerender();
+    }
+
+    function toggleHeaderSelect(h) {
+        if (_selectedHeaders.has(h)) _selectedHeaders.delete(h);
+        else _selectedHeaders.add(h);
+        _rerender();
+    }
+
+    function clearSelection() {
+        _selectedIds.clear();
+        _selectedHeaders.clear();
+        _rerender();
+    }
+
+    // ── Bulk Actions ──
+
+    function bulkDelete() {
+        const rowCount = _selectedIds.size;
+        const colCount = _selectedHeaders.size;
+        
+        let msg = `Are you sure you want to:`;
+        if (rowCount > 0) msg += `\n- Delete ${rowCount} rows`;
+        if (colCount > 0) msg += `\n- CLEAR data in ${colCount} columns`;
+        
+        if (!confirm(msg)) return;
+
+        // Delete rows
+        if (rowCount > 0) {
+            const allContacts = Store.getContacts(_wsId);
+            const remaining = allContacts.filter(c => !_selectedIds.has(c.id));
+            localStorage.setItem('connector_contacts_' + _wsId, JSON.stringify(remaining));
+            _selectedIds.clear();
+        }
+
+        // Clear columns
+        if (colCount > 0) {
+            const allContacts = Store.getContacts(_wsId);
+            const headersToClear = Array.from(_selectedHeaders);
+            const updated = allContacts.map(c => {
+                const newC = { ...c };
+                headersToClear.forEach(h => newC[h] = '');
+                return newC;
+            });
+            localStorage.setItem('connector_contacts_' + _wsId, JSON.stringify(updated));
+            _selectedHeaders.clear();
+        }
+
+        _rerender();
+    }
+
+    function deleteColumn(h) {
+        if (!confirm(`Permanently delete the entire column "${h}"? This will remove the column from the workspace and delete all data within it.`)) return;
+        
+        const schema = Store.getSchema(_wsId);
+        const newSchema = schema.filter(header => header !== h);
+        Store.updateSchema(_wsId, newSchema);
+
+        // Optional: clean up data in contacts objects
+        const contacts = Store.getContacts(_wsId);
+        const cleaned = contacts.map(c => {
+            const newC = { ...c };
+            delete newC[h];
+            return newC;
+        });
+        localStorage.setItem('connector_contacts_' + _wsId, JSON.stringify(cleaned));
+        
+        _rerender();
+    }
+
+    function showAddColumnModal() {
+        const name = prompt('Enter new column name:');
+        if (name && name.trim()) {
+            const schema = Store.getSchema(_wsId);
+            if (schema.some(h => h.toLowerCase() === name.trim().toLowerCase())) {
+                alert('Column already exists!');
+                return;
+            }
+            schema.push(name.trim());
+            Store.updateSchema(_wsId, schema);
+            _rerender();
+        }
+    }
+
+    // ── Existing Handlers ──
 
     function updateCell(id, field, value) {
         const c = Store.getContact(_wsId, id);
@@ -176,66 +302,12 @@ const Contacts = (() => {
         }
     }
 
-    function showDedupeModal() {
-        const schema = Store.getSchema(_wsId);
-        const modal = document.createElement('div');
-        modal.id = 'dedupeModal';
-        modal.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm';
-        modal.innerHTML = `
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Remove Duplicates</h3>
-                <p class="text-sm text-gray-500 mb-6">Choose a unique field (key) to identify duplicates. Records with the same value in this field will be merged or removed.</p>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Identify duplicates by:</label>
-                        <select id="dedupeKey" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-gray-200 outline-none">
-                            ${schema.map(h => `<option value="${h}">${h}</option>`).join('')}
-                        </select>
-                    </div>
-                    <button onclick="Contacts.performDedupe()" class="w-full py-3 bg-[#0E2925] text-white font-bold rounded-xl hover:bg-[#153A35] transition-shadow shadow-lg">Run De-duplication</button>
-                    <button onclick="document.getElementById('dedupeModal').remove()" class="w-full py-2.5 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    function performDedupe() {
-        const key = document.getElementById('dedupeKey').value;
-        const contacts = Store.getContacts(_wsId);
-        const seen = new Set();
-        const toKeep = [];
-        let removed = 0;
-
-        contacts.forEach(c => {
-            const val = String(c[key] || '').trim().toLowerCase();
-            if (!val || !seen.has(val)) {
-                if (val) seen.add(val);
-                toKeep.push(c);
-            } else {
-                removed++;
-            }
-        });
-
-        if (removed > 0) {
-            localStorage.setItem('connector_contacts_' + _wsId, JSON.stringify(toKeep));
-            alert(`Success! Removed ${removed} duplicate records based on "${key}".`);
-            document.getElementById('dedupeModal').remove();
-            _rerender();
-        } else {
-            alert('No duplicates found based on that field.');
-        }
-    }
-
     function _getProcessedContacts() {
         let contacts = Store.getContacts(_wsId);
-        
         if (_filterQuery) {
             const q = _filterQuery.toLowerCase();
             contacts = contacts.filter(c => Object.values(c).some(v => String(v).toLowerCase().includes(q)));
         }
-
         if (_sortBy) {
             contacts.sort((a, b) => {
                 const valA = String(a[_sortBy] || '').toLowerCase();
@@ -245,7 +317,6 @@ const Contacts = (() => {
                 return 0;
             });
         }
-
         return contacts;
     }
 
@@ -255,16 +326,9 @@ const Contacts = (() => {
         _rerender();
     }
 
-    function handleFilter(q) {
-        _filterQuery = q;
-        _rerender();
-    }
-
-    function handleGroup(h) {
-        _groupBy = h;
-        _rerender();
-    }
-
+    function handleFilter(q) { _filterQuery = q; _rerender(); }
+    function handleGroup(h) { _groupBy = h; _rerender(); }
+    
     function resetSchema() {
         if (!confirm('Reset grid? This will revert to default columns.')) return;
         Store.updateSchema(_wsId, ['Name', 'Email', 'Phone', 'Company', 'Tags', 'Notes']);
@@ -286,13 +350,6 @@ const Contacts = (() => {
         }
     }
 
-    function remove(id) {
-        if (confirm('Delete record?')) {
-            Store.deleteContact(_wsId, id);
-            _rerender();
-        }
-    }
-
     function _rerender() {
         const container = document.getElementById('mainContent');
         if (container) {
@@ -303,5 +360,5 @@ const Contacts = (() => {
 
     function _esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-    return { init, render, handleFilter, handleSort, handleGroup, updateCell, handleQuickAdd, showDedupeModal, performDedupe, resetSchema, remove, handleImport };
+    return { init, render, handleFilter, handleSort, handleGroup, updateCell, handleQuickAdd, toggleSelect, toggleSelectAll, toggleHeaderSelect, clearSelection, bulkDelete, deleteColumn, showAddColumnModal, resetSchema, handleImport };
 })();
