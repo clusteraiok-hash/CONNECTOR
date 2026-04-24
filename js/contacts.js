@@ -50,7 +50,22 @@ const Contacts = (() => {
                     </tr>
                 </thead>
                 <tbody id="contactsTableBody">
-                    ${contacts.length === 0 ? `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 text-sm">No contacts yet. Add your first contact or import a CSV.</td></tr>` :
+                    ${contacts.length === 0 ? `<tr><td colspan="5" class="px-6 py-4">
+                        <div class="flex flex-col items-center justify-center py-12">
+                            <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4"><i data-lucide="upload-cloud" class="w-8 h-8 text-gray-400"></i></div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-1">No contacts yet</h3>
+                            <p class="text-sm text-gray-400 mb-5 text-center max-w-xs">Upload a CSV file to bulk-import your contacts, or add them manually.</p>
+                            <div class="flex gap-3">
+                                <label class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-sm">
+                                    <i data-lucide="upload" class="w-4 h-4"></i> Upload CSV
+                                    <input type="file" accept=".csv" class="hidden" onchange="Contacts.handleImport(this)">
+                                </label>
+                                <button onclick="Contacts.showAddModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Add Manually
+                                </button>
+                            </div>
+                        </div>
+                    </td></tr>` :
                     contacts.map(c => _contactRow(c)).join('')}
                 </tbody>
             </table>

@@ -19,9 +19,6 @@ const App = (() => {
 
         Store.setActiveWorkspace(_wsId);
 
-        // Seed demo data if workspace is empty
-        Store.seedDemoData(_wsId);
-
         // Init modules
         Contacts.init(_wsId);
         Deals.init(_wsId);
