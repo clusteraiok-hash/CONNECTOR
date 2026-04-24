@@ -289,14 +289,25 @@ const Contacts = (() => {
 
     async function handleImport(input) {
         if (!input.files[0]) return;
+        const file = input.files[0];
+        
         try {
-            const count = await CSV.importContacts(_wsId, input.files[0]);
+            // Show loading hint (optional, but good for UX)
+            const originalLabel = input.parentElement.innerHTML;
+            input.parentElement.classList.add('opacity-50', 'pointer-events-none');
+            
+            const count = await CSV.importContacts(_wsId, file);
             alert(`Successfully imported ${count} contacts!`);
+            
+            // Force a re-render of the contacts view
             App.navigate('contacts');
         } catch (err) {
+            console.error('Import Error:', err);
             alert('Import failed: ' + err);
+        } finally {
+            input.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+            input.value = '';
         }
-        input.value = '';
     }
 
     function _esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
